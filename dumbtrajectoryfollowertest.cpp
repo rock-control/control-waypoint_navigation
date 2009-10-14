@@ -1,12 +1,12 @@
-#include "localplannertest.hpp"
-#include "localplanner.hpp"
+#include "dumbtrajectoryfollowertest.hpp"
+#include "dumbtrajectoryfollower.hpp"
 #include <Eigen/Geometry>
 #include <iostream>
 
 using namespace Eigen;
 
 int main() {
-    LocalPlanner lp;
+    DumbTrajectoryFollower lp;
     
     Eigen::Vector3d robotPos(0,0,0);
     Eigen::Quaterniond robotOri;

@@ -3,9 +3,9 @@ exec_prefix=@CMAKE_INSTALL_PREFIX@
 libdir=${prefix}/lib
 includedir=${prefix}/include
 
-Name: localplanner
-Description: A local path planner
+Name: dumbtrajectoryfollower
+Description: A driver that generates drive commands from a point and a position
 Version: @PROJECT_VERSION@
-Libs: -L${libdir}
+Libs: -L${libdir} -l dumbtrajectoryfollower
 Cflags: -I${includedir}
 

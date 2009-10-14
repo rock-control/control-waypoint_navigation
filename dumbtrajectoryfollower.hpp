@@ -1,13 +1,13 @@
-#ifndef LOCALPLANNER_HPP
-#define LOCALPLANNER_HPP
+#ifndef DUMBTRAJECTORYFOLLOWER_HPP
+#define DUMBTRAJECTORYFOLLOWER_HPP
 
 #include <Eigen/Geometry>
 
-class LocalPlanner
+class DumbTrajectoryFollower
 {
     //TODO add eigen allign constructor
     public:
-	LocalPlanner();
+	DumbTrajectoryFollower();
 	
 	/**
 	* set positon and orientation, where to drive to
@@ -41,4 +41,4 @@ class LocalPlanner
 	Eigen::Quaterniond targetOrientation;
 };
 
-#endif // LOCALPLANNER_HPP
+#endif 

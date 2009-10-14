@@ -1,5 +1,5 @@
 
-PROJECT(localplanner)
+PROJECT(dumbtrajectoryfollower)
 
 cmake_minimum_required(VERSION 2.6)
 
@@ -16,25 +16,25 @@ find_package(PkgConfig)
 
 INCLUDE_DIRECTORIES(/usr/include/eigen2)
 
-ADD_LIBRARY(localplanner SHARED localplanner.cpp)
+ADD_LIBRARY(dumbtrajectoryfollower SHARED dumbtrajectoryfollower.cpp)
 #TARGET_LINK_LIBRARIES(xsens xsensVendorLib) 
 #${DFKI_TYPES_LIBS})
 
 #need to link to some other libraries ? just add them here
 #TARGET_LINK_LIBRARIES(driver png jpeg)
 
-ADD_EXECUTABLE(localPlannerTest localplannertest.cpp)
-TARGET_LINK_LIBRARIES(localPlannerTest localplanner)
+ADD_EXECUTABLE(dumbTrajectoryFollowerTest dumbtrajectoryfollowertest.cpp)
+TARGET_LINK_LIBRARIES(dumbTrajectoryFollowerTest dumbtrajectoryfollower)
  
 CONFIGURE_FILE(Doxyfile.in Doxyfile @ONLY)
 ADD_CUSTOM_TARGET(doc doxygen Doxyfile)
-INSTALL(TARGETS localplanner
+INSTALL(TARGETS dumbtrajectoryfollower
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib)
-INSTALL(FILES localplanner.hpp DESTINATION include)
+INSTALL(FILES dumbtrajectoryfollower.hpp DESTINATION include)
 
-CONFIGURE_FILE(localplanner.pc.in localplanner.pc @ONLY)
-INSTALL(FILES ${CMAKE_BINARY_DIR}/localplanner.pc DESTINATION lib/pkgconfig)
+CONFIGURE_FILE(dumbtrajectoryfollower.pc.in dumbtrajectoryfollower.pc @ONLY)
+INSTALL(FILES ${CMAKE_BINARY_DIR}/dumbtrajectoryfollower.pc DESTINATION lib/pkgconfig)
 
 
 

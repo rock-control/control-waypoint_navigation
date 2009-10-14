@@ -1,7 +1,7 @@
-#include "localplanner.hpp"
+#include "dumbtrajectoryfollower.hpp"
 #include <iostream>
 
-LocalPlanner::LocalPlanner()
+DumbTrajectoryFollower::DumbTrajectoryFollower()
 {
     stopAndTurnAngle = 30.0 / 180.0 * M_PI;
     tvP = 0.5;
@@ -14,7 +14,7 @@ LocalPlanner::LocalPlanner()
 
 //lame implementation for drive behaviour
 //TODO perhaps add a nice polynom or something
-void LocalPlanner::getMovementCommand ( double& tv, double& rv )
+void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 {
     std::cout << "Target Position in World Coordinates :" << targetPosition << std::endl;
 
@@ -73,14 +73,14 @@ void LocalPlanner::getMovementCommand ( double& tv, double& rv )
     rv = rvP * angleToTarget;
 }
 
-void LocalPlanner::setPose(Eigen::Vector3d p, Eigen::Quaterniond o)
+void DumbTrajectoryFollower::setPose(Eigen::Vector3d p, Eigen::Quaterniond o)
 {
     aligning = false;
     position = p;
     orientation =o;
 }
 
-void LocalPlanner::setTargetPose(Eigen::Vector3d p, Eigen::Quaterniond o) 
+void DumbTrajectoryFollower::setTargetPose(Eigen::Vector3d p, Eigen::Quaterniond o) 
 {
     aligning = false;
     targetPosition = p;
