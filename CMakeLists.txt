@@ -23,8 +23,8 @@ ADD_LIBRARY(localplanner SHARED localplanner.cpp)
 #need to link to some other libraries ? just add them here
 #TARGET_LINK_LIBRARIES(driver png jpeg)
 
-#ADD_EXECUTABLE(xsensTest XsensTest.cpp)
-#TARGET_LINK_LIBRARIES(xsensTest xsens xsensVendorLib)
+ADD_EXECUTABLE(localPlannerTest localplannertest.cpp)
+TARGET_LINK_LIBRARIES(localPlannerTest localplanner)
  
 CONFIGURE_FILE(Doxyfile.in Doxyfile @ONLY)
 ADD_CUSTOM_TARGET(doc doxygen Doxyfile)

@@ -28,6 +28,12 @@ class LocalPlanner
 	void getMovementCommand(double &tv, double &rv);
 	
     private:
+	double stopAndTurnAngle;
+	double tvP;
+	double rvP;
+	double wayPointReachedDistance;
+	double wayPointLeftDistance;
+	bool aligning;
 	Eigen::Vector3d position;
 	Eigen::Quaterniond orientation;
 	
