@@ -8,6 +8,7 @@ DumbTrajectoryFollower::DumbTrajectoryFollower()
     rvP = 0.3;
     wayPointReachedDistance = 0.1;
     wayPointLeftDistance = 0.2;
+    maxDisalignment = 10.0 / 180.0 * M_PI;
     aligning = false;
 	
 }   
@@ -75,7 +76,6 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 
 void DumbTrajectoryFollower::setPose(Eigen::Vector3d p, Eigen::Quaterniond o)
 {
-    aligning = false;
     position = p;
     orientation =o;
 }
@@ -85,6 +85,50 @@ void DumbTrajectoryFollower::setTargetPose(Eigen::Vector3d p, Eigen::Quaterniond
     aligning = false;
     targetPosition = p;
     targetOrientation = o;
+}
+
+
+void DumbTrajectoryFollower::testSetNextWaypoint()
+{
+    if(trajectory.empty())
+	return;
+    
+    if(waypointReached(currentWaypoint->first, currentWaypoint->second)) {
+	std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond> >::iterator nextWp = currentWaypoint;
+	nextWp++;
+
+	if(nextWp != trajectory.end())
+	    currentWaypoint++;
+    }
+    
+    targetPosition = currentWaypoint->first;
+    targetOrientation = currentWaypoint->second;
+}
+
+
+void DumbTrajectoryFollower::setTrajectory(std::vector< std::pair<Eigen::Vector3d, Eigen::Quaterniond> >& t)
+{
+    trajectory = t;
+    currentWaypoint = trajectory.begin();
+}
+
+
+bool DumbTrajectoryFollower::waypointReached(Eigen::Vector3d& target, Eigen::Quaterniond& targetOrientation) const
+{
+    
+    if((position - target).norm() > wayPointReachedDistance)
+	return false;
+	
+    Eigen::Quaterniond oriDiffToTarget = orientation.inverse() * targetOrientation;
+    
+    Eigen::Vector3d t = oriDiffToTarget * Eigen::Vector3d(1.0,0,0);
+    
+    double anglediff = atan2(t.y(), t.x());
+    
+    if(fabs(anglediff) < maxDisalignment)
+	return true;
+    
+    return false;
 }
 
 
