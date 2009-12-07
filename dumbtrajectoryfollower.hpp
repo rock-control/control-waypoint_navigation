@@ -1,14 +1,22 @@
 #ifndef DUMBTRAJECTORYFOLLOWER_HPP
 #define DUMBTRAJECTORYFOLLOWER_HPP
 
+#define EIGEN_DONT_ALIGN
 #include <Eigen/Geometry>
 #include <vector>
-
 class DumbTrajectoryFollower
 {
-    //TODO add eigen allign constructor
     public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	DumbTrajectoryFollower();
+	
+	class Pose {
+	    public:
+		Pose() {};
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		Eigen::Vector3d position;
+	     	Eigen::Quaterniond orientation;
+	};
 	
 	/**
 	* set positon and orientation, where to drive to
@@ -31,7 +39,7 @@ class DumbTrajectoryFollower
 	/**
 	* sets the trajecory the robot should follow
 	*/
-	void setTrajectory(std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond> > &t);
+	void setTrajectory(std::vector<DumbTrajectoryFollower::Pose *> &t);
 	
 	/**
 	* tests if the current Waypoint was reached and switches to
@@ -53,14 +61,16 @@ class DumbTrajectoryFollower
 	double wayPointLeftDistance;
 	double maxDisalignment;
 	bool aligning;
+	bool targetSet;
+	bool poseSet;
 	Eigen::Vector3d position;
 	Eigen::Quaterniond orientation;
 	
 	Eigen::Vector3d targetPosition;
 	Eigen::Quaterniond targetOrientation;
 	
-	std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond> > trajectory;
-	std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond> >::iterator currentWaypoint;
+	std::vector<DumbTrajectoryFollower::Pose *> trajectory;
+	std::vector<DumbTrajectoryFollower::Pose *>::iterator currentWaypoint;
 };
 
 #endif 

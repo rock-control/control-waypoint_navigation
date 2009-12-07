@@ -107,5 +107,18 @@ int main() {
     std::cout << "Tv: " << tv << " Rv: " << rv << std::endl;
     assert(fabs(tv) < 0.001 && rv > 0);
     std::cout << "Test 7 PASSED" << std::endl << std::endl;    
+
+    //test case robot is in front of target and rear points toward target
+    robotOri.setIdentity();
+    targetOri.setIdentity();
+    robotPos = Eigen::Vector3d(0,1,0);
+    targetPos = Eigen::Vector3d(0,0,0);
+    lp.setPose(robotPos, robotOri);
+    lp.setTargetPose(targetPos, targetOri);
+    lp.getMovementCommand(tv, rv);
+    std::cout << "Tv: " << tv << " Rv: " << rv << std::endl;
+    assert(fabs(tv) < 0.001 && rv > 0.3 || rv < -0.3);
+    std::cout << "Test 8 PASSED" << std::endl << std::endl;    
+    
 }
 

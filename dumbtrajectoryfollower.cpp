@@ -4,20 +4,29 @@
 DumbTrajectoryFollower::DumbTrajectoryFollower()
 {
     stopAndTurnAngle = 30.0 / 180.0 * M_PI;
-    tvP = 0.5;
-    rvP = 0.3;
+    tvP = 1.0;
+    rvP = 1.0;
     wayPointReachedDistance = 0.1;
     wayPointLeftDistance = 0.2;
     maxDisalignment = 10.0 / 180.0 * M_PI;
     aligning = false;
-	
+    targetSet = true;
+    poseSet = true;
 }   
 
 //lame implementation for drive behaviour
 //TODO perhaps add a nice polynom or something
 void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 {
-    std::cout << "Target Position in World Coordinates :" << targetPosition << std::endl;
+    if(!targetSet || !poseSet) {
+	std::cout << "No target or pose specified" << std::endl;
+	tv = 0;
+	rv = 0;
+	return;
+    }
+    
+    std::cout << "Target Position in World Coordinates : X: " << targetPosition.x() << " Y: " << targetPosition.y() << " Z: " << targetPosition.z() << std::endl;
+    std::cout << "Own Position in World Coordinates    : X: " << position.x() << " Y: " << position.y() << " Z: " << position.z() << std::endl;
 
     //calculate vector to target position
     Eigen::Vector3d driveVector = targetPosition - position;
@@ -33,11 +42,12 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
     }
     
     Eigen::Vector3d targetPosRobot(0,0,0);
-    
+     
     if(!aligning) {
+	std::cout << "Not aligning" << std::endl;
 	//convert target position into robot coordinate system
-	targetPosRobot = orientation * targetPosition;
-	std::cout << "Target Position in Robot Coordinates :" << targetPosRobot << std::endl;
+	targetPosRobot = orientation.inverse() * (targetPosition - position);
+	std::cout << "Target Position in Robot Coordinates : X: " << targetPosRobot.x() << " Y: " << targetPosRobot.y() << " Z: " << targetPosRobot.z() << std::endl;;
 
     } else {
 	//fit orientation of the robot to the wanted orientation
@@ -62,9 +72,9 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 	angleToTarget = 0;
     } else {
 	//robot is allways alligned to (0 1 0) therefor angle is atan - PI/2
-	angleToTarget = atan2(targetPosRobot.y(), targetPosRobot.x()) - M_PI/2.0;
+	angleToTarget = atan2(-targetPosRobot.x(), targetPosRobot.y());
     }
-    std::cout << "Angle to Target Position :" << angleToTarget << " " << angleToTarget + M_PI/2.0 << std::endl;
+    std::cout << "Angle to Target Position :" << angleToTarget << std::endl;
 
     //if missalignment of the robot is too big stop an point turn
     if(fabs(angleToTarget) > stopAndTurnAngle || aligning) {
@@ -72,16 +82,22 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
     }
     
     rv = rvP * angleToTarget;
+    std::cout << "RV intern :" << rv << std::endl;
+
 }
 
 void DumbTrajectoryFollower::setPose(Eigen::Vector3d p, Eigen::Quaterniond o)
 {
+    std::cout << "DTF: Got new pose " << p;
+    poseSet = true;
     position = p;
     orientation =o;
 }
 
 void DumbTrajectoryFollower::setTargetPose(Eigen::Vector3d p, Eigen::Quaterniond o) 
 {
+    std::cout << "DTF: Got new target pose " << p;
+    targetSet = true;
     aligning = false;
     targetPosition = p;
     targetOrientation = o;
@@ -90,26 +106,41 @@ void DumbTrajectoryFollower::setTargetPose(Eigen::Vector3d p, Eigen::Quaterniond
 
 void DumbTrajectoryFollower::testSetNextWaypoint()
 {
-    if(trajectory.empty())
+    if(trajectory.empty()) 
+    {
+	std::cout << "Trajectory is empty" << std::endl;
 	return;
-    
-    if(waypointReached(currentWaypoint->first, currentWaypoint->second)) {
-	std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond> >::iterator nextWp = currentWaypoint;
-	nextWp++;
-
-	if(nextWp != trajectory.end())
-	    currentWaypoint++;
     }
     
-    targetPosition = currentWaypoint->first;
-    targetOrientation = currentWaypoint->second;
+    if(waypointReached((*currentWaypoint)->position, (*currentWaypoint)->orientation)) {
+	std::cout << "TARGET REACHED " << std::endl;
+	std::vector<Pose *>::iterator nextWp = currentWaypoint;
+	nextWp++;
+
+	if(nextWp != trajectory.end()) 
+	{
+	    currentWaypoint++;
+	    setTargetPose((*currentWaypoint)->position, (*currentWaypoint)->orientation);
+	}
+    }
+    
 }
 
 
-void DumbTrajectoryFollower::setTrajectory(std::vector< std::pair<Eigen::Vector3d, Eigen::Quaterniond> >& t)
+void DumbTrajectoryFollower::setTrajectory(std::vector< DumbTrajectoryFollower::Pose *>& t )
 {
+    targetSet = false;
+    for(std::vector< DumbTrajectoryFollower::Pose *>::iterator it = trajectory.begin(); it != trajectory.end(); it++) 
+    {
+	delete *it;
+    }
+    trajectory.clear();
     trajectory = t;
     currentWaypoint = trajectory.begin();
+    
+    if(!trajectory.empty()) {
+	setTargetPose((*currentWaypoint)->position, (*currentWaypoint)->orientation);
+    }
 }
 
 
