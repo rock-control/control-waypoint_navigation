@@ -18,6 +18,17 @@ DumbTrajectoryFollower::DumbTrajectoryFollower()
 //TODO perhaps add a nice polynom or something
 void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 {
+    
+    //check if std deviation is bigger than the specified std deviation for the current target pose
+    for (int i = 0; i<3; i++) {
+	//not no sqrt, as both values are sqared, and > is vallid in this case
+	if(curPose.covariancePosition(i,i) > targetPose.covariancePosition(i,i)) {
+	    tv = 0;
+	    rv = 0;
+	    return;
+	}
+    }
+    
     if(!targetSet || !poseSet) {
 	std::cout << "No target or pose specified" << std::endl;
 	tv = 0;
@@ -25,11 +36,11 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 	return;
     }
     
-    std::cout << "Target Position in World Coordinates : X: " << targetPosition.x() << " Y: " << targetPosition.y() << " Z: " << targetPosition.z() << std::endl;
-    std::cout << "Own Position in World Coordinates    : X: " << position.x() << " Y: " << position.y() << " Z: " << position.z() << std::endl;
+    std::cout << "Target Position in World Coordinates : X: " << targetPose.position.x() << " Y: " << targetPose.position.y() << " Z: " << targetPose.position.z() << std::endl;
+    std::cout << "Own Position in World Coordinates    : X: " << curPose.position.x() << " Y: " << curPose.position.y() << " Z: " << curPose.position.z() << std::endl;
 
     //calculate vector to target position
-    Eigen::Vector3d driveVector = targetPosition - position;
+    Eigen::Vector3d driveVector = targetPose.position - curPose.position;
     
     tv = tvP * driveVector.norm();
 
@@ -46,7 +57,7 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
     if(!aligning) {
 	std::cout << "Not aligning" << std::endl;
 	//convert target position into robot coordinate system
-	targetPosRobot = orientation.inverse() * (targetPosition - position);
+	targetPosRobot = curPose.orientation.inverse() * (targetPose.position - curPose.position);
 	std::cout << "Target Position in Robot Coordinates : X: " << targetPosRobot.x() << " Y: " << targetPosRobot.y() << " Z: " << targetPosRobot.z() << std::endl;;
 
     } else {
@@ -57,7 +68,7 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 	//identity * targetOrientation == targetOrientation;
 	//orientation * orientation.inv() * targetOrientation == targetOrientation
 	//so orientation.inv() * targetOrientation is the difference from orientation to targetOrientation
-	Eigen::Quaterniond driveOrientation = orientation.inverse() * targetOrientation;
+	Eigen::Quaterniond driveOrientation = curPose.orientation.inverse() * targetPose.orientation;
 
 	//rotate forward vector about the difference of both orienatations
 	//and feed it to the "normal" drive function
@@ -86,21 +97,19 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 
 }
 
-void DumbTrajectoryFollower::setPose(Eigen::Vector3d p, Eigen::Quaterniond o)
+void DumbTrajectoryFollower::setPose(DumbTrajectoryFollower::Pose& pose)
 {
-    std::cout << "DTF: Got new pose " << p;
+    std::cout << "DTF: Got new pose " << pose.position;
     poseSet = true;
-    position = p;
-    orientation =o;
+    curPose = pose;
 }
 
-void DumbTrajectoryFollower::setTargetPose(Eigen::Vector3d p, Eigen::Quaterniond o) 
+void DumbTrajectoryFollower::setTargetPose(DumbTrajectoryFollower::Pose& pose) 
 {
-    std::cout << "DTF: Got new target pose " << p;
+    std::cout << "DTF: Got new target pose " << pose.position;
     targetSet = true;
     aligning = false;
-    targetPosition = p;
-    targetOrientation = o;
+    targetPose = pose;
 }
 
 
@@ -112,7 +121,7 @@ void DumbTrajectoryFollower::testSetNextWaypoint()
 	return;
     }
     
-    if(waypointReached((*currentWaypoint)->position, (*currentWaypoint)->orientation)) {
+    if(waypointReached(**currentWaypoint)) {
 	std::cout << "TARGET REACHED " << std::endl;
 	std::vector<Pose *>::iterator nextWp = currentWaypoint;
 	nextWp++;
@@ -120,10 +129,9 @@ void DumbTrajectoryFollower::testSetNextWaypoint()
 	if(nextWp != trajectory.end()) 
 	{
 	    currentWaypoint++;
-	    setTargetPose((*currentWaypoint)->position, (*currentWaypoint)->orientation);
+	    setTargetPose(**currentWaypoint);
 	}
     }
-    
 }
 
 
@@ -139,18 +147,20 @@ void DumbTrajectoryFollower::setTrajectory(std::vector< DumbTrajectoryFollower::
     currentWaypoint = trajectory.begin();
     
     if(!trajectory.empty()) {
-	setTargetPose((*currentWaypoint)->position, (*currentWaypoint)->orientation);
+	setTargetPose(**currentWaypoint);
     }
 }
 
 
-bool DumbTrajectoryFollower::waypointReached(Eigen::Vector3d& target, Eigen::Quaterniond& targetOrientation) const
+bool DumbTrajectoryFollower::waypointReached(DumbTrajectoryFollower::Pose& target) const
 {
-    
-    if((position - target).norm() > wayPointReachedDistance)
-	return false;
+    //check if we reached target position in respect, to covariance of target position
+    for(int i = 0; i< 3; i++){
+	if(sqrt(curPose.position[i] * curPose.position[i] + target.position[i] * target.position[i]) > sqrt(target.covariancePosition(i,i)))
+	    return false;
+    }
 	
-    Eigen::Quaterniond oriDiffToTarget = orientation.inverse() * targetOrientation;
+    Eigen::Quaterniond oriDiffToTarget = curPose.orientation.inverse() * targetPose.orientation;
     
     Eigen::Vector3d t = oriDiffToTarget * Eigen::Vector3d(1.0,0,0);
     

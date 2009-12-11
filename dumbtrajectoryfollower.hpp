@@ -12,22 +12,23 @@ class DumbTrajectoryFollower
 	
 	class Pose {
 	    public:
-		Pose() {};
+		Pose() : position(Eigen::Vector3d(0,0,0)), orientation(Eigen::Quaterniond::Identity()), covariancePosition(Eigen::Matrix3d::Identity()), covarianceOrientation(Eigen::Matrix3d::Identity()) {};
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 		Eigen::Vector3d position;
 	     	Eigen::Quaterniond orientation;
+		Eigen::Matrix3d covariancePosition;
+		Eigen::Matrix3d covarianceOrientation;
 	};
 	
 	/**
 	* set positon and orientation, where to drive to
 	*/
-	void setTargetPose(Eigen::Vector3d p, Eigen::Quaterniond o);
+	void setTargetPose(Pose &pose);
 	
 	/**
 	* Set current orientation and position
-	* TODO add uncertaintys
 	*/
-	void setPose(Eigen::Vector3d p, Eigen::Quaterniond o);
+	void setPose(Pose &pose);
 	
 	/**
 	* calculates a translational and rotational velocity
@@ -51,7 +52,7 @@ class DumbTrajectoryFollower
 	/**
 	* Calculates if the given waypoint was reached
 	*/
-	bool waypointReached(Eigen::Vector3d &target, Eigen::Quaterniond &targetOrientation) const;
+	bool waypointReached(Pose &target) const;
 	
 
 	double stopAndTurnAngle;
@@ -63,11 +64,8 @@ class DumbTrajectoryFollower
 	bool aligning;
 	bool targetSet;
 	bool poseSet;
-	Eigen::Vector3d position;
-	Eigen::Quaterniond orientation;
-	
-	Eigen::Vector3d targetPosition;
-	Eigen::Quaterniond targetOrientation;
+	Pose curPose;
+	Pose targetPose;
 	
 	std::vector<DumbTrajectoryFollower::Pose *> trajectory;
 	std::vector<DumbTrajectoryFollower::Pose *>::iterator currentWaypoint;
