@@ -23,6 +23,7 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
     for (int i = 0; i<3; i++) {
 	//not no sqrt, as both values are sqared, and > is vallid in this case
 	if(curPose.covariancePosition(i,i) > targetPose.covariancePosition(i,i)) {
+	    std::cout << "Variance of " << i << " is to high " << curPose.covariancePosition(i,i) << " should be smaller than " << targetPose.covariancePosition(i,i) << std::endl; 
 	    tv = 0;
 	    rv = 0;
 	    return;
@@ -144,6 +145,8 @@ void DumbTrajectoryFollower::setTrajectory(std::vector< DumbTrajectoryFollower::
     }
     trajectory.clear();
     trajectory = t;
+    
+      
     currentWaypoint = trajectory.begin();
     
     if(!trajectory.empty()) {
