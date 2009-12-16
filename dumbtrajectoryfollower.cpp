@@ -6,12 +6,11 @@ DumbTrajectoryFollower::DumbTrajectoryFollower()
     stopAndTurnAngle = 30.0 / 180.0 * M_PI;
     tvP = 1.0;
     rvP = 1.0;
-    wayPointReachedDistance = 0.1;
-    wayPointLeftDistance = 0.2;
     maxDisalignment = 10.0 / 180.0 * M_PI;
     aligning = false;
     targetSet = true;
     poseSet = true;
+    reachedHysteresisRatio = 2.0;
 }   
 
 //lame implementation for drive behaviour
@@ -42,16 +41,29 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 
     //calculate vector to target position
     Eigen::Vector3d driveVector = targetPose.position - curPose.position;
+    double distToTarget = driveVector.norm();
     
-    tv = tvP * driveVector.norm();
+    tv = tvP * distToTarget;
 
-    if(tv < wayPointReachedDistance) {
+    bool reachedInnerPoint = true;
+    bool reachedOuterPoint = true;
+    //check if we reached target position in respect, to covariance of target position
+    for(int i = 0; i< 3; i++){
+	double dist = fabs(curPose.position[i] - targetPose.position[i]);
+	double reached_dist = sqrt(targetPose.covariancePosition(i,i));
+	if(dist > reached_dist / reachedHysteresisRatio)
+	    reachedInnerPoint = false;
+	if(dist > reached_dist)
+	    reachedOuterPoint = false;
+    }
+
+    //start aligning if we reached inner point
+    if(reachedInnerPoint)
 	aligning = true;
-    }
-
-    if(tv > wayPointLeftDistance) {
+    
+    //stop aligning, if we left variance of target point
+    if(!reachedOuterPoint)
 	aligning = false;
-    }
     
     Eigen::Vector3d targetPosRobot(0,0,0);
      
@@ -74,6 +86,9 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 	//rotate forward vector about the difference of both orienatations
 	//and feed it to the "normal" drive function
 	targetPosRobot = driveOrientation * Eigen::Vector3d(0,1.0, 0);
+	
+	//just rotate, not translate
+	tv = 0;
     }
 	
     double angleToTarget = 0;
@@ -95,7 +110,6 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
     
     rv = rvP * angleToTarget;
     std::cout << "RV intern :" << rv << std::endl;
-
 }
 
 void DumbTrajectoryFollower::setPose(DumbTrajectoryFollower::Pose& pose)
@@ -122,7 +136,7 @@ void DumbTrajectoryFollower::testSetNextWaypoint()
 	return;
     }
     
-    if(waypointReached(**currentWaypoint)) {
+    while(waypointReached(**currentWaypoint)) {
 	std::cout << "TARGET REACHED " << std::endl;
 	std::vector<Pose *>::iterator nextWp = currentWaypoint;
 	nextWp++;
@@ -159,9 +173,15 @@ bool DumbTrajectoryFollower::waypointReached(DumbTrajectoryFollower::Pose& targe
 {
     //check if we reached target position in respect, to covariance of target position
     for(int i = 0; i< 3; i++){
-	if(sqrt(curPose.position[i] * curPose.position[i] + target.position[i] * target.position[i]) > sqrt(target.covariancePosition(i,i)))
+	double dist = fabs(curPose.position[i] - target.position[i]);
+	double reached_dist = sqrt(target.covariancePosition(i,i));
+	std::cout << "Dist " << i << " is " << dist << " reached dist is " << reached_dist << std::endl;
+	if(dist > reached_dist)
 	    return false;
     }
+	
+    std::cout << "Waypoint reached " << std::endl;
+    //return true;
 	
     Eigen::Quaterniond oriDiffToTarget = curPose.orientation.inverse() * targetPose.orientation;
     

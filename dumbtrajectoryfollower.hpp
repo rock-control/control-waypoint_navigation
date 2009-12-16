@@ -58,9 +58,8 @@ class DumbTrajectoryFollower
 	double stopAndTurnAngle;
 	double tvP;
 	double rvP;
-	double wayPointReachedDistance;
-	double wayPointLeftDistance;
 	double maxDisalignment;
+	double reachedHysteresisRatio;
 	bool aligning;
 	bool targetSet;
 	bool poseSet;
