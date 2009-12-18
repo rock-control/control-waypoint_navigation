@@ -145,6 +145,8 @@ void DumbTrajectoryFollower::testSetNextWaypoint()
 	{
 	    currentWaypoint++;
 	    setTargetPose(**currentWaypoint);
+	} else {
+	    break;
 	}
     }
 }
