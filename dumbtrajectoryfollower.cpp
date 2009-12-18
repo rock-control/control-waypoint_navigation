@@ -11,6 +11,7 @@ DumbTrajectoryFollower::DumbTrajectoryFollower()
     targetSet = true;
     poseSet = true;
     reachedHysteresisRatio = 2.0;
+    newWaypoint = false;
 }   
 
 //lame implementation for drive behaviour
@@ -125,15 +126,16 @@ void DumbTrajectoryFollower::setTargetPose(DumbTrajectoryFollower::Pose& pose)
     targetSet = true;
     aligning = false;
     targetPose = pose;
+    newWaypoint = true;
 }
 
 
-void DumbTrajectoryFollower::testSetNextWaypoint()
+bool DumbTrajectoryFollower::testSetNextWaypoint()
 {
     if(trajectory.empty()) 
     {
 	std::cout << "Trajectory is empty" << std::endl;
-	return;
+	return newWaypoint;
     }
     
     while(waypointReached(**currentWaypoint)) {
@@ -143,12 +145,18 @@ void DumbTrajectoryFollower::testSetNextWaypoint()
 
 	if(nextWp != trajectory.end()) 
 	{
+	    newWaypoint = true;
 	    currentWaypoint++;
 	    setTargetPose(**currentWaypoint);
 	} else {
 	    break;
 	}
     }
+
+    bool ret = newWaypoint;
+    newWaypoint = false;
+
+    return ret;
 }
 
 

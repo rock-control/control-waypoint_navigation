@@ -1,7 +1,5 @@
 #ifndef DUMBTRAJECTORYFOLLOWER_HPP
 #define DUMBTRAJECTORYFOLLOWER_HPP
-
-#define EIGEN_DONT_ALIGN
 #include <Eigen/Geometry>
 #include <vector>
 class DumbTrajectoryFollower
@@ -45,8 +43,25 @@ class DumbTrajectoryFollower
 	/**
 	* tests if the current Waypoint was reached and switches to
 	* the next waypoint in the trajectory
+	*
+	* returns true if new waypoint was selected
 	*/
-	void testSetNextWaypoint();
+	bool testSetNextWaypoint();
+	
+	/**
+	* returns an iterator, that points to the current waypoint in
+	* the trajectory
+	*/
+	std::vector<DumbTrajectoryFollower::Pose *>::const_iterator getCurrentWaypoint() const {
+	    return currentWaypoint;
+	}
+	
+	/**
+	* returns the trajectory
+	*/
+	const std::vector<DumbTrajectoryFollower::Pose *> &getTrajectory() const {
+	    return trajectory;
+	}
 	
     private:
 	/**
@@ -54,7 +69,7 @@ class DumbTrajectoryFollower
 	*/
 	bool waypointReached(Pose &target) const;
 	
-
+	bool newWaypoint;
 	double stopAndTurnAngle;
 	double tvP;
 	double rvP;
