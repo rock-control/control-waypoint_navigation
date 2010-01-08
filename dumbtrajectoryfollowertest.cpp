@@ -9,21 +9,20 @@ int main() {
     DumbTrajectoryFollower lp;
     
     
-    DumbTrajectoryFollower::Pose robotPose;
-    DumbTrajectoryFollower::Pose targetPose;
-    
+    base::samples::RigidBodyState robotPose;
+    base::Waypoint targetPose;
+    targetPose.tol_position = 0.1;
 
-    robotPose.covariancePosition = Eigen::Matrix3d::Identity() * 0.001;
+    robotPose.cov_position = Eigen::Matrix3d::Identity() * 0.001;
     
     double tv, rv;
     
 
     //test case target in front of robot
     robotPose.orientation.setIdentity();
-    targetPose.orientation.setIdentity();
+    targetPose.heading = 0;
     robotPose.position = Eigen::Vector3d(0,0,0);
     targetPose.position = Eigen::Vector3d(0,1,0);
-    
     lp.setPose(robotPose);
     lp.setTargetPose(targetPose);
     lp.getMovementCommand(tv, rv);
@@ -33,7 +32,7 @@ int main() {
     
     //test case target left of robot
     robotPose.orientation.setIdentity();
-    targetPose.orientation.setIdentity();
+    targetPose.heading = 0;
     robotPose.position = Eigen::Vector3d(0,0,0);
     targetPose.position = Eigen::Vector3d(-1,0,0);
     
@@ -46,7 +45,7 @@ int main() {
     
     //test case target right of robot
     robotPose.orientation.setIdentity();
-    targetPose.orientation.setIdentity();
+    targetPose.heading = 0;
     robotPose.position = Eigen::Vector3d(0,0,0);
     targetPose.position = Eigen::Vector3d(1,0,0);
     
@@ -59,7 +58,7 @@ int main() {
     
     //test case target right of robot
     robotPose.orientation.setIdentity();
-    targetPose.orientation.setIdentity();
+    targetPose.heading = 0;
     robotPose.position = Eigen::Vector3d(0,0,0);
     targetPose.position = Eigen::Vector3d(1,0.1,0);
     
@@ -73,9 +72,10 @@ int main() {
     //test case target equals own position
     robotPose.position = Eigen::Vector3d(0,0,0);
     robotPose.orientation.setIdentity();
-    targetPose.orientation.setIdentity();
+    targetPose.position = Eigen::Vector3d(0,0,0);
+    targetPose.heading = 0;
     lp.setPose(robotPose);
-    lp.setTargetPose(robotPose);
+    lp.setTargetPose(targetPose);
     lp.getMovementCommand(tv, rv);
     std::cout << "Tv: " << tv << " Rv: " << rv << std::endl;
     assert(fabs(tv) < 0.001 && fabs(rv) < 0.001);
@@ -84,7 +84,7 @@ int main() {
     
     //test case robot needs to be alligned
     robotPose.orientation.setIdentity();
-    targetPose.orientation = Quaterniond(AngleAxisd(M_PI/2.0, Vector3d::UnitZ()));
+    targetPose.heading = M_PI/2.0;
     robotPose.position = Eigen::Vector3d(0,0,0);
     targetPose.position = Eigen::Vector3d(0,0,0);
     
@@ -97,7 +97,7 @@ int main() {
     
     //test case robot needs to be alligned
     robotPose.orientation = Quaterniond(AngleAxisd(M_PI/4.0, Vector3d::UnitZ()));
-    targetPose.orientation = Quaterniond(AngleAxisd(M_PI/2.0, Vector3d::UnitZ()));
+    targetPose.heading = M_PI/2.0;
     robotPose.position = Eigen::Vector3d(0,0,0);
     targetPose.position = Eigen::Vector3d(0,0,0);
     
@@ -110,7 +110,7 @@ int main() {
 
     //test case robot is in front of target and rear points toward target
     robotPose.orientation.setIdentity();
-    targetPose.orientation.setIdentity();
+    targetPose.heading = 0;
     robotPose.position = Eigen::Vector3d(0,1,0);
     targetPose.position = Eigen::Vector3d(0,0,0);
     lp.setPose(robotPose);

@@ -2,31 +2,24 @@
 #define DUMBTRAJECTORYFOLLOWER_HPP
 #include <Eigen/Geometry>
 #include <vector>
+#include <base/samples/rigid_body_state.h>
+#include <base/waypoint.h>
+
 class DumbTrajectoryFollower
 {
     public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	DumbTrajectoryFollower();
 	
-	class Pose {
-	    public:
-		Pose() : position(Eigen::Vector3d(0,0,0)), orientation(Eigen::Quaterniond::Identity()), covariancePosition(Eigen::Matrix3d::Identity()), covarianceOrientation(Eigen::Matrix3d::Identity()) {};
-		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-		Eigen::Vector3d position;
-	     	Eigen::Quaterniond orientation;
-		Eigen::Matrix3d covariancePosition;
-		Eigen::Matrix3d covarianceOrientation;
-	};
-	
 	/**
 	* set positon and orientation, where to drive to
 	*/
-	void setTargetPose(Pose &pose);
+	void setTargetPose(base::Waypoint &pose);
 	
 	/**
 	* Set current orientation and position
 	*/
-	void setPose(Pose &pose);
+	void setPose(base::samples::RigidBodyState &pose);
 	
 	/**
 	* calculates a translational and rotational velocity
@@ -38,7 +31,7 @@ class DumbTrajectoryFollower
 	/**
 	* sets the trajecory the robot should follow
 	*/
-	void setTrajectory(std::vector<DumbTrajectoryFollower::Pose *> &t);
+	void setTrajectory(std::vector<base::Waypoint *> &t);
 	
 	/**
 	* tests if the current Waypoint was reached and switches to
@@ -52,14 +45,14 @@ class DumbTrajectoryFollower
 	* returns an iterator, that points to the current waypoint in
 	* the trajectory
 	*/
-	std::vector<DumbTrajectoryFollower::Pose *>::const_iterator getCurrentWaypoint() const {
+	std::vector<base::Waypoint *>::const_iterator getCurrentWaypoint() const {
 	    return currentWaypoint;
 	}
 	
 	/**
 	* returns the trajectory
 	*/
-	const std::vector<DumbTrajectoryFollower::Pose *> &getTrajectory() const {
+	const std::vector<base::Waypoint *> &getTrajectory() const {
 	    return trajectory;
 	}
 	
@@ -67,7 +60,7 @@ class DumbTrajectoryFollower
 	/**
 	* Calculates if the given waypoint was reached
 	*/
-	bool waypointReached(Pose &target) const;
+	bool waypointReached(base::Waypoint &target) const;
 	
 	bool newWaypoint;
 	double stopAndTurnAngle;
@@ -78,11 +71,11 @@ class DumbTrajectoryFollower
 	bool aligning;
 	bool targetSet;
 	bool poseSet;
-	Pose curPose;
-	Pose targetPose;
+	base::samples::RigidBodyState curPose;
+	base::Waypoint targetPose;
 	
-	std::vector<DumbTrajectoryFollower::Pose *> trajectory;
-	std::vector<DumbTrajectoryFollower::Pose *>::iterator currentWaypoint;
+	std::vector<base::Waypoint *> trajectory;
+	std::vector<base::Waypoint *>::iterator currentWaypoint;
 };
 
 #endif 

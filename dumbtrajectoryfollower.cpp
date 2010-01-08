@@ -22,8 +22,8 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
     //check if std deviation is bigger than the specified std deviation for the current target pose
     for (int i = 0; i<3; i++) {
 	//not no sqrt, as both values are sqared, and > is vallid in this case
-	if(curPose.covariancePosition(i,i) > targetPose.covariancePosition(i,i)) {
-	    std::cout << "Variance of " << i << " is to high " << curPose.covariancePosition(i,i) << " should be smaller than " << targetPose.covariancePosition(i,i) << std::endl; 
+	if(curPose.cov_position(i,i) > targetPose.tol_position) {
+	    std::cout << "Variance of " << i << " is to high " << curPose.cov_position(i,i) << " should be smaller than " << targetPose.tol_position << std::endl; 
 	    tv = 0;
 	    rv = 0;
 	    return;
@@ -51,7 +51,7 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
     //check if we reached target position in respect, to covariance of target position
     for(int i = 0; i< 3; i++){
 	double dist = fabs(curPose.position[i] - targetPose.position[i]);
-	double reached_dist = sqrt(targetPose.covariancePosition(i,i));
+	double reached_dist = targetPose.tol_position;
 	if(dist > reached_dist / reachedHysteresisRatio)
 	    reachedInnerPoint = false;
 	if(dist > reached_dist)
@@ -82,7 +82,7 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
 	//identity * targetOrientation == targetOrientation;
 	//orientation * orientation.inv() * targetOrientation == targetOrientation
 	//so orientation.inv() * targetOrientation is the difference from orientation to targetOrientation
-	Eigen::Quaterniond driveOrientation = curPose.orientation.inverse() * targetPose.orientation;
+	Eigen::Quaterniond driveOrientation = curPose.orientation.inverse() * Eigen::Quaterniond(Eigen::AngleAxisd(targetPose.heading, Eigen::Vector3d::UnitZ()));
 
 	//rotate forward vector about the difference of both orienatations
 	//and feed it to the "normal" drive function
@@ -113,14 +113,14 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
     std::cout << "RV intern :" << rv << std::endl;
 }
 
-void DumbTrajectoryFollower::setPose(DumbTrajectoryFollower::Pose& pose)
+void DumbTrajectoryFollower::setPose(base::samples::RigidBodyState& pose)
 {
     std::cout << "DTF: Got new pose " << pose.position;
     poseSet = true;
     curPose = pose;
 }
 
-void DumbTrajectoryFollower::setTargetPose(DumbTrajectoryFollower::Pose& pose) 
+void DumbTrajectoryFollower::setTargetPose(base::Waypoint& pose) 
 {
     std::cout << "DTF: Got new target pose " << pose.position;
     targetSet = true;
@@ -140,7 +140,7 @@ bool DumbTrajectoryFollower::testSetNextWaypoint()
     
     while(waypointReached(**currentWaypoint)) {
 	std::cout << "TARGET REACHED " << std::endl;
-	std::vector<Pose *>::iterator nextWp = currentWaypoint;
+	std::vector<base::Waypoint *>::iterator nextWp = currentWaypoint;
 	nextWp++;
 
 	if(nextWp != trajectory.end()) 
@@ -160,10 +160,10 @@ bool DumbTrajectoryFollower::testSetNextWaypoint()
 }
 
 
-void DumbTrajectoryFollower::setTrajectory(std::vector< DumbTrajectoryFollower::Pose *>& t )
+void DumbTrajectoryFollower::setTrajectory(std::vector< base::Waypoint *>& t )
 {
     targetSet = false;
-    for(std::vector< DumbTrajectoryFollower::Pose *>::iterator it = trajectory.begin(); it != trajectory.end(); it++) 
+    for(std::vector<base::Waypoint *>::iterator it = trajectory.begin(); it != trajectory.end(); it++) 
     {
 	delete *it;
     }
@@ -179,12 +179,12 @@ void DumbTrajectoryFollower::setTrajectory(std::vector< DumbTrajectoryFollower::
 }
 
 
-bool DumbTrajectoryFollower::waypointReached(DumbTrajectoryFollower::Pose& target) const
+bool DumbTrajectoryFollower::waypointReached(base::Waypoint& target) const
 {
     //check if we reached target position in respect, to covariance of target position
     for(int i = 0; i< 3; i++){
 	double dist = fabs(curPose.position[i] - target.position[i]);
-	double reached_dist = sqrt(target.covariancePosition(i,i));
+	double reached_dist = target.tol_position;
 	std::cout << "Dist " << i << " is " << dist << " reached dist is " << reached_dist << std::endl;
 	if(dist > reached_dist)
 	    return false;
@@ -193,7 +193,7 @@ bool DumbTrajectoryFollower::waypointReached(DumbTrajectoryFollower::Pose& targe
     std::cout << "Waypoint reached " << std::endl;
     //return true;
 	
-    Eigen::Quaterniond oriDiffToTarget = curPose.orientation.inverse() * targetPose.orientation;
+    Eigen::Quaterniond oriDiffToTarget = curPose.orientation.inverse() * Eigen::Quaterniond(Eigen::AngleAxisd(targetPose.heading, Eigen::Vector3d::UnitZ()));
     
     Eigen::Vector3d t = oriDiffToTarget * Eigen::Vector3d(1.0,0,0);
     
