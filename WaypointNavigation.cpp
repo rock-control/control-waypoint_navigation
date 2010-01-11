@@ -1,7 +1,7 @@
-#include "dumbtrajectoryfollower.hpp"
+#include "WaypointNavigation.hpp"
 #include <iostream>
 
-DumbTrajectoryFollower::DumbTrajectoryFollower()
+WaypointNavigation::WaypointNavigation()
 {
     stopAndTurnAngle = 30.0 / 180.0 * M_PI;
     tvP = 1.0;
@@ -16,7 +16,7 @@ DumbTrajectoryFollower::DumbTrajectoryFollower()
 
 //lame implementation for drive behaviour
 //TODO perhaps add a nice polynom or something
-void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
+void WaypointNavigation::getMovementCommand ( double& tv, double& rv )
 {
     
     //check if std deviation is bigger than the specified std deviation for the current target pose
@@ -113,14 +113,14 @@ void DumbTrajectoryFollower::getMovementCommand ( double& tv, double& rv )
     std::cout << "RV intern :" << rv << std::endl;
 }
 
-void DumbTrajectoryFollower::setPose(base::samples::RigidBodyState& pose)
+void WaypointNavigation::setPose(base::samples::RigidBodyState& pose)
 {
     std::cout << "DTF: Got new pose " << pose.position;
     poseSet = true;
     curPose = pose;
 }
 
-void DumbTrajectoryFollower::setTargetPose(base::Waypoint& pose) 
+void WaypointNavigation::setTargetPose(base::Waypoint& pose) 
 {
     std::cout << "DTF: Got new target pose " << pose.position;
     targetSet = true;
@@ -130,7 +130,7 @@ void DumbTrajectoryFollower::setTargetPose(base::Waypoint& pose)
 }
 
 
-bool DumbTrajectoryFollower::testSetNextWaypoint()
+bool WaypointNavigation::testSetNextWaypoint()
 {
     if(trajectory.empty()) 
     {
@@ -160,7 +160,7 @@ bool DumbTrajectoryFollower::testSetNextWaypoint()
 }
 
 
-void DumbTrajectoryFollower::setTrajectory(std::vector< base::Waypoint *>& t )
+void WaypointNavigation::setTrajectory(std::vector< base::Waypoint *>& t )
 {
     targetSet = false;
     for(std::vector<base::Waypoint *>::iterator it = trajectory.begin(); it != trajectory.end(); it++) 
@@ -179,7 +179,7 @@ void DumbTrajectoryFollower::setTrajectory(std::vector< base::Waypoint *>& t )
 }
 
 
-bool DumbTrajectoryFollower::waypointReached(base::Waypoint& target) const
+bool WaypointNavigation::waypointReached(base::Waypoint& target) const
 {
     //check if we reached target position in respect, to covariance of target position
     for(int i = 0; i< 3; i++){

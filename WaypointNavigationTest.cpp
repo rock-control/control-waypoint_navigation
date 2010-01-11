@@ -1,12 +1,12 @@
-#include "dumbtrajectoryfollowertest.hpp"
-#include "dumbtrajectoryfollower.hpp"
+#include "WaypointNavigationTest.hpp"
+#include "WaypointNavigation.hpp"
 #include <Eigen/Geometry>
 #include <iostream>
 
 using namespace Eigen;
 
 int main() {
-    DumbTrajectoryFollower lp;
+    WaypointNavigation lp;
     
     
     base::samples::RigidBodyState robotPose;

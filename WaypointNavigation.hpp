@@ -5,11 +5,11 @@
 #include <base/samples/rigid_body_state.h>
 #include <base/waypoint.h>
 
-class DumbTrajectoryFollower
+class WaypointNavigation
 {
     public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-	DumbTrajectoryFollower();
+	WaypointNavigation();
 	
 	/**
 	* set positon and orientation, where to drive to
