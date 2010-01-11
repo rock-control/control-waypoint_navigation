@@ -6,6 +6,6 @@ includedir=${prefix}/include
 Name: Waypoint navigation
 Description: A driver that generates drive commands from a point and a position
 Version: @PROJECT_VERSION@
-Libs: -L${libdir} -ldumbtrajectoryfollower
+Libs: -L${libdir} -lwaypoint_navigation
 Cflags: -I${includedir}
 
